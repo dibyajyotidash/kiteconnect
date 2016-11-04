@@ -286,7 +286,7 @@ class KiteConnect(object):
         params = locals()
         del(params["self"])
 
-        for k in params:
+        for k in list(params.keys()):
             if k is None:
                 del(params[k])
 
