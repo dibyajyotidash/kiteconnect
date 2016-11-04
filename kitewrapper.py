@@ -18,19 +18,19 @@ class KiteFront(KiteConnect):
         "api.invalidate": "/session/token",
         "user.margins": "/margins/{segment}",
         
-        "session" : "/session",
+        "session" : "/session", #checked
 
-        "orders": "/orders",
-        "trades": "/trades",
-        "orders.info": "/orders/{order_id}",
+        "orders": "/orders", #checked
+        "trades": "/trades", #checked
+        "orders.info": "/orders/{order_id}", #checked
 
-        "orders.place": "/orders/{variety}",
-        "orders.modify": "/orders/{variety}/{order_id}",
+        "orders.place": "/orders", #checked
+        "orders.modify": "/orders/{variety}/{order_id}", 
         "orders.cancel": "/orders/{variety}/{order_id}",
         "orders.trades": "/orders/{order_id}/trades",
 
-        "portfolio.positions": "/positions",
-        "portfolio.holdings": "/holdings",
+        "portfolio.positions": "/positions", #checked
+        "portfolio.holdings": "/holdings", #checked
         "portfolio.positions.modify": "/positions",
 
         "market.instruments.all": "/instruments",
@@ -56,13 +56,14 @@ class KiteFront(KiteConnect):
         self.headers_json = {
                                 'user-agent': USER_AGENT_STR,
                                 'Host': 'kite.zerodha.com',
-                                'Referer': 'https://kite.zerodha.com/',
-                                'Accept': 'application/json, text/plain, */*',
-                                'Origin': 'https://kite.zerodha.com',
-                                'Referer': BASE_REFERER,
-                                'Connection': 'keep-alive',
-                                'Content-Type': 'application/json;charset=UTF-8',
+                                #'Accept': 'application/json, text/plain, */*',
+                                #'Content-Type': 'application/json;charset=UTF-8',
+                                'Accept': "*/*",
+                                'Accept-Encoding' : 'gzip, deflate, sdch, br',
                                 'Accept-Language': 'en-US,en;q=0.8',
+                                'Cache-Control' : 'max-age=0',
+                                'Connection': 'keep-alive',
+                                #'Upgrade-Insecure-Requests':1
                              }
         super(KiteFront, self).__init__(*args, **kwargs)
 
@@ -113,6 +114,27 @@ class KiteFront(KiteConnect):
     def _check_step2(self):
         return (self.resp.text.find('Positions')) >= 0   
 
+    # orders
+    def order_place(self,
+                    exchange,
+                    tradingsymbol,
+                    transaction_type,
+                    quantity,
+                    order_type,
+                    price=0,
+                    product="CNC",
+                    validity="DAY",
+                    disclosed_quantity=0,
+                    trigger_price=0,
+                    squareoff_value=0,
+                    stoploss_value=0,
+                    trailing_stoploss=0,
+                    variety="regular",
+                    ):
+        """Place an order."""
+        params = locals()
+        del(params["self"])
+        return self._post("orders.place", params)["order_id"]
 
     def _request(self, route, method, parameters=None):
         """Make an HTTP request."""
@@ -152,15 +174,15 @@ class KiteFront(KiteConnect):
                 print(params if method != "POST" else None)
             r = self.session.request(method,
                     url,
-                    data=params if method == "POST" else None,
+                    json=params if method == "POST" else None,
                     params=params if method != "POST" else None,
+                    headers=self.headers_json,
                     verify=False,
                     allow_redirects=True,
                     timeout=self._timeout,
-                    proxies=self.proxies,
-                    )
+                    proxies=self.proxies)
+            self.r = r
             if self.debug:
-                resp = r
                 import pdb; pdb.set_trace()
         except requests.ConnectionError:
             raise ex.ClientNetworkException("Gateway connection error", code=503)
