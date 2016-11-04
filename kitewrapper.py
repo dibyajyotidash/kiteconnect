@@ -146,10 +146,10 @@ class KiteFront(KiteConnect):
 
         try:
             if self.debug:
-                print method
-                print url
-                print params if method == "POST" else None
-                print params if method != "POST" else None
+                print(method)
+                print(url)
+                print(params if method == "POST" else None)
+                print(params if method != "POST" else None)
             r = self.session.request(method,
                     url,
                     data=params if method == "POST" else None,
